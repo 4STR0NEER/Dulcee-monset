@@ -14,7 +14,9 @@ export function initScrollFx() {
         io.unobserve(e.target);
         e.target.__enter?.();
       }),
-    { rootMargin: "0px 0px -15% 0px" }
+    // fire once 15% of the element shows. (A negative bottom margin here once hid the Book button for
+    // good: at the very end of the page it can never scroll above the margin line.)
+    { threshold: 0.15 }
   );
   const onEnter = (el, fn) => {
     el.__enter = fn;

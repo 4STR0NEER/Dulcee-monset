@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { animate, onScroll, svg } from "animejs";
+import { svg, utils } from "animejs";
 
 // Builds the path from where things actually are, so it fits any screen. It starts where the hero ends,
 // waves down the left margin (content never sits there), and only crosses the page once, in the open
@@ -167,34 +167,49 @@ export default function RibbonThread() {
     const line = ref.current.querySelector(".line");
     const length = line.getTotalLength();
     const sparks = createSparks(canvas.current);
+    const drawables = svg.createDrawable(ref.current.querySelectorAll("path"));
     let burst = false;
+    let shown = 0; // drawn fraction on screen, eased toward the scroll position
+    let raf = 0;
 
-    const anim = animate(svg.createDrawable(ref.current.querySelectorAll("path")), {
-      draw: ["0 0", "0 1"],
-      ease: "linear",
-      // the drawing tip stays near the middle of the screen as you scroll
-      autoplay: onScroll({
-        target: ref.current,
-        enter: { target: "top", container: "center" },
-        leave: { target: "bottom", container: "bottom" }, // done as the Book button comes into view
-        sync: 0.85, // anime: higher = tighter; per frame it moves lerp(0.01, 0.2, sync) of the way
-      }),
-      onUpdate: (self) => {
-        const p = self.progress;
-        const pt = line.getPointAtLength(p * length);
-        const box = ref.current.getBoundingClientRect();
-        const x = box.left + pt.x;
-        const y = box.top + pt.y + scrollY;
-        sparks.move(x, y, p > 0.002 && p < 0.998);
-        // the ribbon arrives at Book your stay: one burst, re-armed if you scroll back up
-        if (p >= 0.998 && !burst) {
-          burst = true;
-          sparks.burst(x, y);
-        } else if (p < 0.95) burst = false;
-      },
-    });
+    // progress from the ribbon's live position (not cached offsets, which go stale as reveals and
+    // the 3D section settle): 0 when its top reaches mid-screen, 1 when its end reaches the bottom
+    const target = () => {
+      const r = ref.current.getBoundingClientRect();
+      const p = (innerHeight / 2 - r.top) / (r.height - innerHeight / 2);
+      return Math.min(Math.max(p, 0), 1);
+    };
+
+    const frame = () => {
+      const goal = target();
+      shown += (goal - shown) * 0.18;
+      if (Math.abs(goal - shown) < 0.0004) shown = goal;
+      utils.set(drawables, { draw: `0 ${shown}` });
+
+      const pt = line.getPointAtLength(shown * length);
+      const box = ref.current.getBoundingClientRect();
+      const x = box.left + pt.x;
+      const y = box.top + pt.y + scrollY;
+      sparks.move(x, y, shown > 0.002 && shown < 0.998);
+      // the ribbon arrives at Book your stay: one burst, re-armed if you scroll back up
+      if (shown >= 0.998 && !burst) {
+        burst = true;
+        sparks.burst(x, y);
+      } else if (shown < 0.95) burst = false;
+
+      raf = shown === goal ? 0 : requestAnimationFrame(frame);
+    };
+    const wake = () => raf || (raf = requestAnimationFrame(frame));
+    addEventListener("scroll", wake, { passive: true });
+    addEventListener("resize", wake);
+    shown = target(); // start where the page already is (e.g. after a reload mid-page)
+    wake();
+
     return () => {
-      anim.revert();
+      cancelAnimationFrame(raf);
+      removeEventListener("scroll", wake);
+      removeEventListener("resize", wake);
+      utils.set(drawables, { draw: "0 1" });
       sparks.destroy();
     };
   }, [geo]);
