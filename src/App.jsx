@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import Loader from "./components/Loader";
-import ScrollIndex from "./components/kokonutui/scroll-index";
+import Header from "./components/Header";
+import RibbonThread from "./components/RibbonThread";
 import Room from "./sections/Room";
 import Details from "./sections/Details";
 import Lobby from "./sections/Lobby";
@@ -39,16 +40,16 @@ export default function App() {
     <>
       {!loaded && <Loader ready={ready} onDone={done} />}
 
-      <ScrollIndex scroller="window" selector="[data-label]">
-        <main>
-          <Room loaded={loaded} />
-          <Details />
-          <Lobby />
-          <Terrace />
-          <Outside />
-          <Stay />
-        </main>
-      </ScrollIndex>
+      <Header loaded={loaded} />
+      <main className="relative">
+        <Room loaded={loaded} />
+        <Details />
+        <Lobby />
+        <Terrace />
+        <Outside />
+        <Stay />
+        <RibbonThread />
+      </main>
     </>
   );
 }

@@ -3,7 +3,7 @@ import { photo } from "@/lib/photo";
 // 03 The lobby. "A warm greeting" is from the brand book's messaging page (p.13).
 export default function Lobby() {
   return (
-    <section className="bg-white">
+    <section id="lobby" className="bg-white">
       <figure className="reveal-img relative h-[80svh] min-h-96 overflow-hidden">
         <img
           {...photo("lobby-lounge")}
@@ -20,7 +20,6 @@ export default function Lobby() {
             <span className="text-maple">03</span>&ensp;The lobby
           </p>
           <h2
-            data-label="The lobby"
             className="reveal mt-5 font-display text-4xl leading-[1.1] font-light text-cerulean sm:text-6xl"
             style={{ "--i": 1 }}
           >

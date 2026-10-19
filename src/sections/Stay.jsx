@@ -10,7 +10,7 @@ const RIBBON = { face: "#b18f59", foldA: "#ffffff", foldB: "#cbdce1", foldC: "#d
 // 06 Stay. Copy: brand book messaging page (p.13).
 export default function Stay() {
   return (
-    <section className="relative overflow-hidden bg-cerulean text-white">
+    <section id="stay" className="relative overflow-hidden bg-cerulean text-white">
       <TwistingRibbon
         aria-hidden="true"
         className="pointer-events-none absolute inset-0 opacity-45"
@@ -25,7 +25,6 @@ export default function Stay() {
           <span className="text-maple">06</span>&ensp;Stay with us
         </p>
         <h2
-          data-label="Stay with us"
           className="reveal mt-5 font-display text-4xl leading-[1.1] font-light sm:text-6xl"
           style={{ "--i": 1 }}
         >
@@ -37,6 +36,7 @@ export default function Stay() {
         <div className="reveal mt-10" style={{ "--i": 3 }}>
           <a
             href={BOOKING_URL}
+            data-book
             className="inline-block rounded-full bg-maple px-9 py-4 font-body text-sm font-semibold tracking-[0.2em] text-cerulean uppercase transition-[transform,background-color] duration-150 ease-out hover:bg-[#c2a06a] active:scale-[0.97]"
           >
             Book your stay

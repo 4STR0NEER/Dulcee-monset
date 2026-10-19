@@ -3,7 +3,7 @@ import { photo } from "@/lib/photo";
 // 04 The terrace. Copy: brand book traits, "Understated Elegance" (p.6) and messaging (p.13).
 export default function Terrace() {
   return (
-    <section className="bg-grey-1">
+    <section id="terrace" className="bg-grey-1">
       <figure className="reveal-img relative h-[85svh] min-h-96 overflow-hidden">
         <img
           {...photo("cafe")}
@@ -30,7 +30,6 @@ export default function Terrace() {
             <span className="text-maple">04</span>&ensp;The terrace
           </p>
           <h2
-            data-label="The terrace"
             className="reveal mt-5 font-display text-4xl leading-[1.1] font-light text-cerulean sm:text-6xl"
             style={{ "--i": 1 }}
           >

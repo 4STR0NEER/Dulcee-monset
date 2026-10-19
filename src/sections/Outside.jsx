@@ -41,7 +41,7 @@ export default function Outside() {
   }, []);
 
   return (
-    <section className="bg-cerulean">
+    <section id="naga" className="bg-cerulean">
       <div ref={root} className="relative h-svh motion-safe:h-[260svh]">
         <div className="sticky top-0 h-svh overflow-hidden">
           {/* the building: left card (desktop) / lower card (phone) */}
@@ -69,7 +69,6 @@ export default function Outside() {
               <span className="text-maple">05</span>&ensp;Naga City, Cebu
             </p>
             <h2
-              data-label="Naga City"
               className="mt-4 font-display text-3xl leading-[1.1] font-light text-white sm:text-5xl"
             >
               From our town <span className="text-maple">to the world.</span>

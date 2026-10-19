@@ -17,14 +17,13 @@ const IMAGES = [
 // 02 The details. Copy is the brand book's own core principles (p.7).
 export default function Details() {
   return (
-    <section className="bg-grey-1 px-6 py-24 sm:px-12 sm:py-36">
+    <section id="details" className="bg-grey-1 px-6 py-24 sm:px-12 sm:py-36">
       <div className="mx-auto grid max-w-6xl gap-14 lg:grid-cols-[1fr_1.15fr] lg:gap-20">
         <div className="lg:sticky lg:top-28 lg:self-start">
           <p className="reveal font-body text-xs tracking-[0.3em] text-grey-5 uppercase">
             <span className="text-maple">02</span>&ensp;The details
           </p>
           <h2
-            data-label="The details"
             className="reveal mt-5 font-display text-3xl leading-[1.15] font-light text-cerulean sm:text-5xl"
             style={{ "--i": 1 }}
           >
