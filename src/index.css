@@ -17,13 +17,14 @@
 }
 
 html {
-  background: var(--color-grey-1);
+  background: var(--color-cerulean);
+  overflow-x: clip; /* photos that bleed to the edge must never cause sideways scroll */
   color: var(--color-cerulean);
   font-family: var(--font-body);
   -webkit-font-smoothing: antialiased;
 }
 
-/* One-shot scroll reveals; App.jsx sets data-shown. Stagger with style="--i: n". */
+/* One-shot scroll reveals; lib/scroll-fx.js sets data-shown. Stagger with style="--i: n". */
 .reveal {
   opacity: 0;
   transform: translateY(16px);
@@ -32,16 +33,9 @@ html {
     transform 700ms var(--ease-out-strong);
   transition-delay: calc(var(--i, 0) * 80ms);
 }
-.reveal-img {
-  clip-path: inset(0 0 100% 0);
-  transition: clip-path 1200ms cubic-bezier(0.77, 0, 0.175, 1);
-}
 .reveal[data-shown] {
   opacity: 1;
   transform: none;
-}
-.reveal-img[data-shown] {
-  clip-path: inset(0);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -49,7 +43,36 @@ html {
     transform: none;
     transition-duration: 300ms;
   }
-  .reveal-img {
-    clip-path: none;
+}
+
+/* the page background flows between chapters; lib/scroll-fx.js sets the colour from data-bg */
+body {
+  background-color: var(--color-cerulean);
+  transition: background-color 1100ms cubic-bezier(0.65, 0, 0.35, 1);
+}
+
+/* chapter headlines: hidden until they rise (scroll-fx); the gold words get a drawn underline */
+@media (prefers-reduced-motion: no-preference) {
+  .rise:not([data-shown]) {
+    opacity: 0;
   }
+}
+.ul {
+  background: linear-gradient(var(--color-maple), var(--color-maple)) no-repeat 0 84% / 0% 2px; /* above the bottom edge: headline lines sit in masks exactly one line tall */
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+  transition: background-size 900ms var(--ease-out-strong);
+}
+.ul[data-shown] {
+  background-size: 100% 2px;
+}
+
+/* hairlines that draw across */
+.draw-line {
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 1200ms var(--ease-out-strong);
+}
+.draw-line[data-shown] {
+  transform: none;
 }

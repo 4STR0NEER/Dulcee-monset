@@ -7,7 +7,7 @@ import { animate, onScroll, svg } from "animejs";
 function buildPath(main) {
   const box = main.getBoundingClientRect();
   const W = main.clientWidth;
-  const first = document.getElementById("details");
+  const first = document.getElementById("about");
   const book = document.querySelector("[data-book]");
   if (!first || !book) return null;
 
@@ -77,7 +77,7 @@ export default function RibbonThread() {
     <svg
       ref={ref}
       aria-hidden="true"
-      className="pointer-events-none absolute left-0 z-20"
+      className="pointer-events-none absolute left-0 z-0"
       style={geo ? { top: geo.start, width: geo.width, height: geo.height } : { display: "none" }}
       viewBox={geo ? `0 0 ${geo.width} ${geo.height}` : undefined}
       fill="none"

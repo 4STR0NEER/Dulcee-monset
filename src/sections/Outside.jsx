@@ -41,7 +41,7 @@ export default function Outside() {
   }, []);
 
   return (
-    <section id="naga" className="bg-cerulean">
+    <section id="naga" data-bg="#0f4a6c">
       <div ref={root} className="relative h-svh motion-safe:h-[260svh]">
         <div className="sticky top-0 h-svh overflow-hidden">
           {/* the building: left card (desktop) / lower card (phone) */}

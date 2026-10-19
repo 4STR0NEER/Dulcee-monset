@@ -10,7 +10,7 @@ const RIBBON = { face: "#b18f59", foldA: "#ffffff", foldB: "#cbdce1", foldC: "#d
 // 06 Stay. Copy: brand book messaging page (p.13).
 export default function Stay() {
   return (
-    <section id="stay" className="relative overflow-hidden bg-cerulean text-white">
+    <section id="stay" data-bg="#0b3b57" className="relative overflow-hidden text-white">
       <TwistingRibbon
         aria-hidden="true"
         className="pointer-events-none absolute inset-0 opacity-45"
@@ -25,10 +25,9 @@ export default function Stay() {
           <span className="text-maple">06</span>&ensp;Stay with us
         </p>
         <h2
-          className="reveal mt-5 font-display text-4xl leading-[1.1] font-light sm:text-6xl"
-          style={{ "--i": 1 }}
+          className="rise mt-5 font-display text-4xl leading-[1.1] font-light sm:text-6xl"
         >
-          Is <span className="text-maple">Dulcee</span> worth remembering?
+          Is <span className="ul text-maple">Dulcee</span> worth remembering?
         </h2>
         <p className="reveal mt-6 max-w-lg font-body text-base leading-[1.8] text-white/80" style={{ "--i": 2 }}>
           If you’re someone who values sincerity over spectacle, then Dulcee is the kind of place that stays with you.

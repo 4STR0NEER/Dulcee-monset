@@ -5,6 +5,7 @@ import { BOOKING_URL } from "@/sections/Stay";
 
 const CHAPTERS = [
   { label: "The room", href: "#room" },
+  { label: "About", href: "#about" },
   { label: "Details", href: "#details" },
   { label: "Lobby", href: "#lobby" },
   { label: "Terrace", href: "#terrace" },

@@ -1,8 +1,10 @@
 import { useCallback, useEffect, useState } from "react";
+import { initScrollFx } from "./lib/scroll-fx";
 import Loader from "./components/Loader";
 import Header from "./components/Header";
 import RibbonThread from "./components/RibbonThread";
 import Room from "./sections/Room";
+import About from "./sections/About";
 import Details from "./sections/Details";
 import Lobby from "./sections/Lobby";
 import Terrace from "./sections/Terrace";
@@ -21,20 +23,8 @@ export default function App() {
   const [loaded, setLoaded] = useState(false);
   const done = useCallback(() => setLoaded(true), []);
 
-  // One-shot reveals: CSS does the motion (index.css), this only marks elements as they come into view.
-  useEffect(() => {
-    const io = new IntersectionObserver(
-      (entries) =>
-        entries.forEach((e) => {
-          if (!e.isIntersecting) return;
-          e.target.dataset.shown = "";
-          io.unobserve(e.target);
-        }),
-      { rootMargin: "0px 0px -12% 0px" }
-    );
-    document.querySelectorAll(".reveal, .reveal-img").forEach((el) => io.observe(el));
-    return () => io.disconnect();
-  }, []);
+  // headlines, photo wipes, fade-ups and the flowing background (lib/scroll-fx.js)
+  useEffect(initScrollFx, []);
 
   return (
     <>
@@ -43,6 +33,7 @@ export default function App() {
       <Header loaded={loaded} />
       <main className="relative">
         <Room loaded={loaded} />
+        <About />
         <Details />
         <Lobby />
         <Terrace />

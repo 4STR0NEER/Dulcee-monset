@@ -621,15 +621,15 @@ export default function LightboxGrid({
 
   return (
     <div className={cn("w-full max-w-xl", className)}>
-      <ul className="grid grid-cols-3 gap-2">
+      <ul className="grid grid-cols-3 gap-1">
         {images.map((image, index) => (
           <li
-            className={cn(index === 0 && "col-span-2 row-span-2")}
+            className={cn("tile", index === 0 && "col-span-2 row-span-2")}
             key={image.src}
           >
             <button
               aria-label={`Open ${image.alt}`}
-              className="relative block aspect-square w-full overflow-hidden rounded-sm bg-grey-2 outline-offset-2 focus-visible:outline-2 focus-visible:outline-cerulean"
+              className="relative block aspect-square w-full overflow-hidden bg-grey-2 outline-offset-2 focus-visible:outline-2 focus-visible:outline-cerulean"
               onClick={() => open(index)}
               ref={(node) => {
                 thumbs.current[index] = node;
