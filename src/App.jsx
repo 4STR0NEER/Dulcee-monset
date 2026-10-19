@@ -1,35 +1,48 @@
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Loader from "./components/Loader";
+import ScrollIndex from "./components/kokonutui/scroll-index";
+import Room from "./sections/Room";
+import Details from "./sections/Details";
+import Lobby from "./sections/Lobby";
+import { photo } from "./lib/photo";
 
-// What the first frame needs before the curtain lifts. Add the room photo's decode() here once it exists.
-const ready = document.fonts.ready;
+// The curtain lifts only once the fonts and the first photo are ready, so the room never appears half-loaded.
+const hero = new Image();
+hero.sizes = "100vw";
+hero.srcset = photo("room-king").srcSet;
+hero.src = photo("room-king").src;
+const ready = Promise.all([document.fonts.ready, hero.decode().catch(() => {})]);
 
 export default function App() {
   const [loaded, setLoaded] = useState(false);
   const done = useCallback(() => setLoaded(true), []);
 
+  // One-shot reveals: CSS does the motion (index.css), this only marks elements as they come into view.
+  useEffect(() => {
+    const io = new IntersectionObserver(
+      (entries) =>
+        entries.forEach((e) => {
+          if (!e.isIntersecting) return;
+          e.target.dataset.shown = "";
+          io.unobserve(e.target);
+        }),
+      { rootMargin: "0px 0px -12% 0px" }
+    );
+    document.querySelectorAll(".reveal, .reveal-img").forEach((el) => io.observe(el));
+    return () => io.disconnect();
+  }, []);
+
   return (
     <>
       {!loaded && <Loader ready={ready} onDone={done} />}
 
-      <main>
-        {/* 01 The room. Placeholder until the HD photos from Drive are in resources/photos/ */}
-        <section className="relative flex h-svh items-end overflow-hidden bg-grey-2">
-          <div
-            className={`absolute inset-0 grid place-items-center bg-grey-3/60 transition-transform duration-[1800ms] ease-(--ease-out-strong) motion-reduce:transition-none ${
-              loaded ? "scale-100" : "scale-[1.06]"
-            }`}
-          >
-            <p className="font-body text-xs tracking-[0.25em] text-grey-5 uppercase">Room photo goes here</p>
-          </div>
-
-          <div className="relative max-w-3xl px-6 pb-16 sm:px-12 sm:pb-24">
-            <h1 className="font-display text-4xl leading-[1.1] font-light text-cerulean sm:text-6xl">
-              Thoughtful stays, meaningful moments, <span className="text-maple">unforgettable warmth.</span>
-            </h1>
-          </div>
-        </section>
-      </main>
+      <ScrollIndex scroller="window" selector="[data-label]">
+        <main>
+          <Room loaded={loaded} />
+          <Details />
+          <Lobby />
+        </main>
+      </ScrollIndex>
     </>
   );
 }
