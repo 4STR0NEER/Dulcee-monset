@@ -1,8 +1,8 @@
 import TwistingRibbon from "@/components/vengeance/twisting-ribbon";
 import DulceeMark from "@/components/DulceeMark";
 
-// TODO: the client's booking engine URL. Every "Book" link reads this one constant.
-export const BOOKING_URL = "#";
+// The hotel's Cloudbeds booking engine (Facebook tracking param stripped). Every "Book" link reads this.
+export const BOOKING_URL = "https://hotels.cloudbeds.com/en/reservation/Efu2Ie?currency=php";
 
 // module-level so the ribbon's effect doesn't restart on every render
 const RIBBON = { face: "#b18f59", foldA: "#ffffff", foldB: "#cbdce1", foldC: "#d9c29a" };

@@ -2,8 +2,9 @@ import { useEffect, useRef } from "react";
 import { createScope, createTimeline, onScroll, utils } from "animejs";
 import { photo } from "@/lib/photo";
 
-// Google Maps search, not a pinned address: the client hasn't supplied one yet. Check it resolves to the hotel.
-const DIRECTIONS = "https://www.google.com/maps/search/?api=1&query=Hotel+Dulcee+Naga+City+Cebu";
+// The hotel's Google Maps listing: the client's link with the ?entry/g_ep tracking query removed.
+const DIRECTIONS =
+  "https://www.google.com/maps/place/Hotel+Dulcee/@10.2218966,123.7601939,17z/data=!4m13!1m2!2m1!1sgoogle+maps+Hotel+Dulcee+Naga+City+Cebu!3m9!1s0x33a9794d9d694b1b:0xf9ec09d719485483!5m2!4m1!1i2!8m2!3d10.2218948!4d123.7627722!15sCidnb29nbGUgbWFwcyBIb3RlbCBEdWxjZWUgTmFnYSBDaXR5IENlYnUiA4gBAVopIidnb29nbGUgbWFwcyBob3RlbCBkdWxjZWUgbmFnYSBjaXR5IGNlYnWSAQVob3RlbJoBJENoZERTVWhOTUc5blMwVkpRMEZuU1VOU05tUmlkR2xCUlJBQuABAPoBBAgRECw!16s%2Fg%2F11rsct6kzf";
 
 // 05 Naga City, Cebu. The second pull-back: the terrace view shrinks into a frame around the sea
 // and the building it belongs to comes into view. Final layout lives in CSS; scroll animates *into* it.
