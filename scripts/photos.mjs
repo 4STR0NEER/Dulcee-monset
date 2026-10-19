@@ -14,6 +14,10 @@ const PHOTOS = {
   "suite-lounge": "IMG_9249.jpg",
   "lobby-team": "IMG_9465.jpg",
   "lobby-lounge": "IMG_9454.jpg",
+  "cafe": "IMG_9518.jpg",
+  "terrace-leaf": "IMG_9537 - Copy - Copy (2).jpg",
+  "terrace-sea": "IMG_9534 - Copy - Copy (2).jpg",
+  "facade": "6063b04c42ec379104f5726b29b81e5e.webp", // only 1024px wide: keep it card-sized, never full-bleed
 };
 const WIDTHS = [960, 1920];
 

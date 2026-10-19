@@ -4,6 +4,9 @@ import ScrollIndex from "./components/kokonutui/scroll-index";
 import Room from "./sections/Room";
 import Details from "./sections/Details";
 import Lobby from "./sections/Lobby";
+import Terrace from "./sections/Terrace";
+import Outside from "./sections/Outside";
+import Stay from "./sections/Stay";
 import { photo } from "./lib/photo";
 
 // The curtain lifts only once the fonts and the first photo are ready, so the room never appears half-loaded.
@@ -41,6 +44,9 @@ export default function App() {
           <Room loaded={loaded} />
           <Details />
           <Lobby />
+          <Terrace />
+          <Outside />
+          <Stay />
         </main>
       </ScrollIndex>
     </>
