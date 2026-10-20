@@ -16,7 +16,7 @@ export default function BigFrame({ name, alt, title, sub, className = "" }) {
       </div>
 
       <div className="block-panel absolute inset-0 [clip-path:inset(62%_0%_0%_0%)] md:[clip-path:inset(0%_66.6%_0%_0%)]">
-        <svg className="absolute inset-0 h-full w-full" aria-hidden="true">
+        <svg className="cutout absolute inset-0 h-full w-full" aria-hidden="true">
           <mask id={mask}>
             <rect width="100%" height="100%" fill="white" />
             {/* desktop: title stacked in the left third */}

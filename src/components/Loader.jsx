@@ -1,5 +1,5 @@
 import { useLayoutEffect, useRef } from "react";
-import { animate, createTimeline, createScope, stagger, svg, utils } from "animejs";
+import { animate, createTimeline, createScope, stagger, svg, utils, waapi } from "animejs";
 import DulceeMark from "./DulceeMark";
 
 const WORD = "DULCEÉ";
@@ -41,7 +41,7 @@ export default function Loader({ ready, onDone }) {
       const lift = () => {
         if (lifted) return;
         lifted = true;
-        animate(".curtain", {
+        waapi.animate(".curtain", {
           y: "-100%",
           duration: 1100,
           ease: "inOut(4)",
@@ -49,28 +49,35 @@ export default function Loader({ ready, onDone }) {
         });
       };
 
-      const intro = createTimeline({ defaults: { ease: "out(4)" } })
+      // Transforms and fades run as WAAPI, on the compositor: the page mounting underneath keeps the
+      // main thread busy during load, and JS-ticked frames stuttered and jumped. Only the SVG drawing
+      // (ribbons, wave) can't move off it, so it stays on anime's timeline.
+      const draw = createTimeline({ defaults: { ease: "out(4)" } })
         // two brand ribbons draw in and sweep toward the centre...
         .add(svg.createDrawable(".ribbon"), { draw: ["0 0", "0 1"], duration: 1100, delay: stagger(140) }, 0)
         // ...then retract into it as the monogram rises
         .add(svg.createDrawable(".ribbon"), { draw: "1 1", duration: 700, ease: "inOut(3)", delay: stagger(80) }, 900)
-        .add("[data-piece]", { opacity: [0, 1], y: [24, 0], duration: 800, delay: stagger(90) }, 1050)
-        .add("[data-wave-clip]", { width: 1320, duration: 900, ease: "inOut(4)" }, 1350)
-        .add(".hotel", { opacity: [0, 1], duration: 600 }, 1700)
+        .add("[data-wave-clip]", { width: 1320, duration: 900, ease: "inOut(4)" }, 1350);
+      const fades = [
+        waapi.animate("[data-piece]", { opacity: [0, 1], y: [24, 0], duration: 800, delay: stagger(90, { start: 1050 }), ease: "out(4)" }),
+        waapi.animate(".hotel", { opacity: [0, 1], duration: 600, delay: 1700, ease: "out(4)" }),
         // the letters close in from wide tracking (transform only, no layout)
-        .add(".letter", {
+        waapi.animate(".letter", {
           opacity: [0, 1],
           x: (_, i) => [(i - (WORD.length - 1) / 2) * 22, 0],
           duration: 1000,
-          delay: stagger(40),
-        }, 1650)
-        .add(".skip", { opacity: [0, 1], duration: 400 }, 600);
+          delay: stagger(40, { start: 1650 }),
+          ease: "out(4)",
+        }),
+        waapi.animate(".skip", { opacity: [0, 1], duration: 400, delay: 600, ease: "out(4)" }),
+      ];
+      const intro = [draw, ...fades];
 
       // lift only when both the intro has played and the page is ready
-      Promise.all([intro.then(), ready]).then(lift);
+      Promise.all([...intro.map((a) => a.then()), ready]).then(lift);
 
       self.add("skip", () => {
-        intro.complete();
+        intro.forEach((a) => a.complete());
         lift();
       });
     });

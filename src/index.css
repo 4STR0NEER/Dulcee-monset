@@ -130,3 +130,9 @@ body {
     transform: scale(1.04);
   }
 }
+
+/* cut-out titles: the cerulean casts a shadow into its letter holes, so they read as cut, not printed.
+   On the whole svg (screen px), so it stays the same size while the hero zooms through the name. */
+.cutout {
+  filter: drop-shadow(0 2px 2px rgb(10 34 48 / 0.45)) drop-shadow(0 8px 14px rgb(10 34 48 / 0.35));
+}

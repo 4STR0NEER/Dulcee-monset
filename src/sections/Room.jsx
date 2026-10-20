@@ -135,7 +135,7 @@ export default function Room({ loaded }) {
 
         {/* the name: cerulean everywhere except the letters, which are holes onto the room */}
         <svg
-          className="name absolute inset-0 h-full w-full motion-reduce:hidden"
+          className="name cutout absolute inset-0 h-full w-full motion-reduce:hidden"
           viewBox="-700 -260 1400 420"
           preserveAspectRatio="xMidYMid meet"
           aria-hidden="true"
