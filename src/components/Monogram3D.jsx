@@ -9,6 +9,9 @@ import { MARK } from "./DulceeMark";
 // Lazy-loaded (three.js is heavy) and renders only while on screen.
 export default function Monogram3D({ onFail }) {
   const host = useRef(null);
+  // a ref, so a parent re-render (new onFail) never tears down and rebuilds the whole scene
+  const fail = useRef(onFail);
+  fail.current = onFail;
 
   useEffect(() => {
     const el = host.current;
@@ -18,9 +21,15 @@ export default function Monogram3D({ onFail }) {
     try {
       renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     } catch {
-      onFail?.(); // no WebGL: the caller shows the flat logo instead
+      fail.current?.(); // no WebGL: the caller shows the flat logo instead
       return;
     }
+    // the GPU can drop the context (driver reset, too many open on the page): fall back to the flat logo
+    const onLost = (e) => {
+      e.preventDefault();
+      fail.current?.();
+    };
+    renderer.domElement.addEventListener("webglcontextlost", onLost);
     renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
     el.appendChild(renderer.domElement);
@@ -43,13 +52,13 @@ export default function Monogram3D({ onFail }) {
     const parts = new THREE.Group();
     const geometries = [];
     new SVGLoader().parse(svg).paths.forEach((path, i) => {
-      const geo = new THREE.ExtrudeGeometry(SVGLoader.createShapes(path), {
+      const geo = new THREE.ExtrudeGeometry(path.toShapes(), {
         depth: i === 3 ? 40 : 70, // the wave sits a little thinner, like a base
         bevelEnabled: true,
         bevelThickness: 8,
         bevelSize: 5,
-        bevelSegments: 4,
-        curveSegments: 32,
+        bevelSegments: 3,
+        curveSegments: 12, // the mark's curves are gentle; 32 tripled the build time for no visible gain
       });
       geometries.push(geo);
       parts.add(new THREE.Mesh(geo, i === 1 ? maple : pearl));
@@ -65,6 +74,12 @@ export default function Monogram3D({ onFail }) {
     rig.add(mark);
     scene.add(rig);
 
+    let raf = 0;
+    let running = false;
+    let ready = false; // shaders compiled
+    let visible = false;
+    let disposed = false;
+
     const size = () => {
       const { width, height } = el.getBoundingClientRect();
       renderer.setSize(width, height, false);
@@ -76,7 +91,7 @@ export default function Monogram3D({ onFail }) {
     size();
     const ro = new ResizeObserver(() => {
       size();
-      if (!running) renderer.render(scene, camera);
+      if (ready && !running) renderer.render(scene, camera);
     });
     ro.observe(el);
 
@@ -88,8 +103,6 @@ export default function Monogram3D({ onFail }) {
     };
     addEventListener("pointermove", onPointer, { passive: true });
 
-    let raf = 0;
-    let running = false;
     let born = null; // time the monogram first came into view
     const ease = (t) => 1 - (1 - t) ** 4;
 
@@ -106,21 +119,31 @@ export default function Monogram3D({ onFail }) {
       raf = running ? requestAnimationFrame(frame) : 0;
     };
 
-    if (reduce) {
-      renderer.render(scene, camera); // one still frame
-    } else {
-      rig.rotation.y = -Math.PI * 0.5;
-    }
+    if (!reduce) rig.rotation.y = -Math.PI * 0.5;
 
+    // compile the shaders off the main thread (where supported) before the first frame, so mounting
+    // doesn't hitch the scroll; the loop starts once they're ready
     const io = new IntersectionObserver(([entry]) => {
-      if (reduce) return;
-      running = entry.isIntersecting;
+      visible = entry.isIntersecting;
+      if (reduce || !ready) return;
+      running = visible;
       if (running && !raf) raf = requestAnimationFrame(frame);
     });
     io.observe(el);
+    renderer.compileAsync(scene, camera).then(() => {
+      if (disposed) return;
+      ready = true;
+      if (reduce) renderer.render(scene, camera); // one still frame
+      else if (visible && !raf) {
+        running = true;
+        raf = requestAnimationFrame(frame);
+      }
+    });
 
     return () => {
+      disposed = true;
       running = false;
+      renderer.domElement.removeEventListener("webglcontextlost", onLost);
       cancelAnimationFrame(raf);
       io.disconnect();
       ro.disconnect();
@@ -131,9 +154,10 @@ export default function Monogram3D({ onFail }) {
       env.dispose();
       pmrem.dispose();
       renderer.dispose();
+      renderer.forceContextLoss(); // dispose() alone keeps the context alive; they leak, and the browser caps them
       renderer.domElement.remove();
     };
-  }, [onFail]);
+  }, []);
 
   return <div ref={host} className="h-full w-full" aria-hidden="true" />;
 }

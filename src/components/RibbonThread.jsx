@@ -6,7 +6,9 @@ import { svg, utils } from "animejs";
 //   1. sweeps left to right just above the Details photos (they develop as the light passes),
 //   2. waves down the right margin and sweeps back under the "A warm greeting." heading,
 //   3. waves down the left margin and curls in to the Book button.
-// It reports the points where it touches something (`touches`), so they can react.
+// It reports the points where it touches something (`touches`), so they can react, and a sampled
+// polyline of itself (`pts`): the browser's getPointAtLength re-walks the whole page-long path on every
+// call, and walking it that way cost ~2s of main thread while the loader played.
 // Coordinates are relative to the svg, which starts at the top of #about.
 function buildPath(main) {
   const box = main.getBoundingClientRect();
@@ -32,7 +34,26 @@ function buildPath(main) {
   const R = W - g;
   let x = L;
   let y = 160;
-  let d = `M${W / 2} 0 C${W / 2} 90 ${L} 60 ${L} ${y}`; // out of the room, into the left margin
+  let d = `M${W / 2} 0`;
+  const pts = [{ x: W / 2, y: 0, len: 0 }];
+  const to = (px, py) => {
+    const p = pts[pts.length - 1];
+    pts.push({ x: px, y: py, len: p.len + Math.hypot(px - p.x, py - p.y) });
+  };
+  const C = (x1, y1, x2, y2, ex, ey) => {
+    const { x: x0, y: y0 } = pts[pts.length - 1];
+    d += ` C${x1} ${y1} ${x2} ${y2} ${ex} ${ey}`;
+    for (let i = 1; i <= 24; i++) {
+      const t = i / 24, u = 1 - t;
+      to(u * u * u * x0 + 3 * u * u * t * x1 + 3 * u * t * t * x2 + t * t * t * ex,
+         u * u * u * y0 + 3 * u * u * t * y1 + 3 * u * t * t * y2 + t * t * t * ey);
+    }
+  };
+  const Ln = (ex, ey) => {
+    d += ` L${ex} ${ey}`;
+    to(ex, ey);
+  };
+  C(W / 2, 90, L, 60, L, y); // out of the room, into the left margin
 
   // equal gentle bows down the current margin, alternating sides, so it reads as a ribbon
   const run = (toY) => {
@@ -41,19 +62,19 @@ function buildPath(main) {
     const step = (toY - y) / bows;
     for (let i = 0; i < bows; i++) {
       const bow = i % 2 ? -sway : sway;
-      d += ` C${x + bow} ${y + step / 3} ${x + bow} ${y + (2 * step) / 3} ${x} ${y + step}`;
+      C(x + bow, y + step / 3, x + bow, y + (2 * step) / 3, x, y + step);
       y += step;
     }
   };
   // a level sweep across the page at `sy`, over the span a..b, from this margin to the other one
   const cross = (sy, a, z) => {
-    const to = x === L ? R : L;
-    const s = Math.sign(to - x);
+    const other = x === L ? R : L;
+    const s = Math.sign(other - x);
     run(sy - 150);
-    d += ` C${x} ${sy - 60} ${a - s * 120} ${sy} ${a} ${sy}`;
-    d += ` L${z} ${sy}`;
-    d += ` C${z + s * 120} ${sy} ${to} ${sy + 60} ${to} ${sy + 150}`;
-    x = to;
+    C(x, sy - 60, a - s * 120, sy, a, sy);
+    Ln(z, sy);
+    C(z + s * 120, sy, other, sy + 60, other, sy + 150);
+    x = other;
     y = sy + 150;
   };
 
@@ -66,10 +87,11 @@ function buildPath(main) {
   // 3. down the left margin, then one long, low sweep in to the Book button
   const end = { x: b.left - 14, y: (b.top + b.bottom) / 2 };
   run(end.y - 260);
-  d += ` C${L} ${end.y - 60} ${end.x - 220} ${end.y + 10} ${end.x} ${end.y}`;
+  C(L, end.y - 60, end.x - 220, end.y + 10, end.x, end.y);
 
   return {
     d,
+    pts,
     start,
     height: end.y + 40,
     width: W,
@@ -196,7 +218,11 @@ export default function RibbonThread() {
     let frame = 0;
     const measure = () => {
       cancelAnimationFrame(frame);
-      frame = requestAnimationFrame(() => setGeo(buildPath(main)));
+      frame = requestAnimationFrame(() => {
+        const next = buildPath(main);
+        // the observer fires as fonts and photos settle; only rebuild when the path really moved
+        setGeo((prev) => (prev && next && prev.d === next.d && prev.start === next.start ? prev : next));
+      });
     };
     const ro = new ResizeObserver(measure);
     ro.observe(main);
@@ -209,24 +235,37 @@ export default function RibbonThread() {
 
   useEffect(() => {
     if (!geo || matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-    const line = ref.current.querySelector(".line");
-    const length = line.getTotalLength();
+    const { pts } = geo;
+    const length = pts[pts.length - 1].len;
     const sparks = createSparks(canvas.current);
     const drawables = svg.createDrawable(ref.current.querySelectorAll("path"));
     let burst = false;
-    // one walk along the line: how far down it has reached at each length (the sideways sweeps add
-    // length without depth), and the length at which it passes closest to each touch point
-    const STEP = 4;
+    // how far down the line has reached at each sample (the sideways sweeps add length without
+    // depth), and the length at which it passes closest to each touch point
     const depth = [];
     const touches = geo.touches.map(({ el }) => ({ el, len: 0, best: Infinity, fired: false }));
-    for (let l = 0, deepest = 0; l <= length; l += STEP) {
-      const p = line.getPointAtLength(l);
+    for (let i = 0, deepest = 0; i < pts.length; i++) {
+      const p = pts[i];
       depth.push((deepest = Math.max(deepest, p.y)));
-      geo.touches.forEach(({ x, y }, i) => {
+      geo.touches.forEach(({ x, y }, k) => {
         const dd = (p.x - x) ** 2 + (p.y - y) ** 2;
-        if (dd < touches[i].best) Object.assign(touches[i], { len: l, best: dd });
+        if (dd < touches[k].best) Object.assign(touches[k], { len: p.len, best: dd });
       });
     }
+    // the point at a given length along the line (binary search + lerp between samples)
+    const pointAt = (l) => {
+      let lo = 0;
+      let hi = pts.length - 1;
+      while (lo < hi) {
+        const mid = (lo + hi) >> 1;
+        if (pts[mid].len < l) lo = mid + 1;
+        else hi = mid;
+      }
+      const b = pts[lo];
+      const a = pts[Math.max(0, lo - 1)];
+      const t = b.len > a.len ? (l - a.len) / (b.len - a.len) : 0;
+      return { x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t };
+    };
     let shown = 0; // drawn fraction on screen, eased toward the scroll position
     let raf = 0;
 
@@ -245,7 +284,7 @@ export default function RibbonThread() {
         if (depth[mid] < probe) lo = mid + 1;
         else hi = mid;
       }
-      return (lo * STEP) / length;
+      return pts[lo].len / length;
     };
 
     const frame = () => {
@@ -254,7 +293,7 @@ export default function RibbonThread() {
       if (Math.abs(goal - shown) < 0.0004) shown = goal;
       utils.set(drawables, { draw: `0 ${shown}` });
 
-      const pt = line.getPointAtLength(shown * length);
+      const pt = pointAt(shown * length);
       const box = ref.current.getBoundingClientRect();
       const x = box.left + pt.x;
       const y = box.top + pt.y + scrollY;
