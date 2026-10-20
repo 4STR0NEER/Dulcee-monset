@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { initScrollFx } from "./lib/scroll-fx";
+import { initSmooth } from "./lib/smooth";
 import Loader from "./components/Loader";
 import Header from "./components/Header";
 import RibbonThread from "./components/RibbonThread";
@@ -25,6 +26,8 @@ export default function App() {
 
   // headlines, photo wipes, fade-ups and the flowing background (lib/scroll-fx.js)
   useEffect(initScrollFx, []);
+  // weighted scrolling, and the one-nudge glide through the opening (lib/smooth.js)
+  useEffect(initSmooth, []);
 
   return (
     <>

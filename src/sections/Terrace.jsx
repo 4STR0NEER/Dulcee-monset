@@ -1,12 +1,15 @@
 import Frame from "@/components/Frame";
+import BigFrame from "@/components/BigFrame";
 
 // 04 The terrace. Copy: brand book messaging (p.13).
 export default function Terrace() {
   return (
     <section id="terrace" data-bg="#f4efe6">
-      <Frame
+      <BigFrame
         name="cafe"
         alt="The café under a ceiling of curving timber ribbons, with rattan seating and glass walls open to the sea"
+        title={["The", "Café"]}
+        sub="Rattan seating under curving timber, with glass walls open to the sea."
         className="h-[90svh] min-h-96"
       />
 

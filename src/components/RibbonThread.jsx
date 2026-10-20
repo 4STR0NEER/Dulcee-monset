@@ -1,38 +1,83 @@
 import { useEffect, useRef, useState } from "react";
 import { svg, utils } from "animejs";
 
-// Builds the path from where things actually are, so it fits any screen. It starts where the hero ends,
-// waves down the left margin (content never sits there), and only crosses the page once, in the open
-// space of the Stay section, to curl in to the Book button. Coordinates are relative to the svg.
+// Builds the path from where things actually are, so it fits any screen. It starts where the hero
+// ends and waves down the left margin, then:
+//   1. sweeps left to right just above the Details photos (they develop as the light passes),
+//   2. waves down the right margin and sweeps back under the "A warm greeting." heading,
+//   3. waves down the left margin and curls in to the Book button.
+// It reports the points where it touches something (`touches`), so they can react.
+// Coordinates are relative to the svg, which starts at the top of #about.
 function buildPath(main) {
   const box = main.getBoundingClientRect();
   const W = main.clientWidth;
   const first = document.getElementById("about");
   const book = document.querySelector("[data-book]");
-  if (!first || !book) return null;
+  const gridEl = document.querySelector("[data-ribbon-sweep]");
+  const headEl = document.querySelector("[data-ribbon-touch]");
+  if (!first || !book || !gridEl || !headEl) return null;
 
   const start = first.getBoundingClientRect().top - box.top;
-  const b = book.getBoundingClientRect();
-  const end = { x: b.left - box.left - 14, y: b.top - box.top + b.height / 2 - start };
+  const at = (el) => {
+    const r = el.getBoundingClientRect();
+    return { left: r.left - box.left, right: r.right - box.left, top: r.top - box.top - start, bottom: r.bottom - box.top - start };
+  };
+  const grid = at(gridEl);
+  const head = at(headEl);
+  const b = at(book);
 
-  const g = W < 768 ? 10 : Math.round(W * 0.035); // the margin the ribbon lives in
+  const g = W < 768 ? 10 : Math.round(W * 0.035); // the margins the ribbon lives in
   const sway = W < 768 ? 5 : 18;
+  const L = g;
+  const R = W - g;
+  let x = L;
   let y = 160;
-  let d = `M${W / 2} 0 C${W / 2} 90 ${g} 60 ${g} ${y}`; // out of the room, into the margin
+  let d = `M${W / 2} 0 C${W / 2} 90 ${L} 60 ${L} ${y}`; // out of the room, into the left margin
 
-  // equal bows of roughly 640px that alternate sides, so it reads as a ribbon, not a rule
-  const stop = end.y - 260;
-  const bows = Math.max(1, Math.round((stop - y) / 640));
-  const step = (stop - y) / bows;
-  for (let i = 0; i < bows; i++) {
-    const bow = i % 2 ? -sway : sway;
-    d += ` C${g + bow} ${y + step / 3} ${g + bow} ${y + (2 * step) / 3} ${g} ${y + step}`;
-    y += step;
-  }
-  // the one crossing: a long, low sweep to the button
-  d += ` C${g} ${end.y - 60} ${end.x - 220} ${end.y + 10} ${end.x} ${end.y}`;
+  // equal gentle bows down the current margin, alternating sides, so it reads as a ribbon
+  const run = (toY) => {
+    if (toY <= y) return;
+    const bows = Math.max(1, Math.round((toY - y) / 640));
+    const step = (toY - y) / bows;
+    for (let i = 0; i < bows; i++) {
+      const bow = i % 2 ? -sway : sway;
+      d += ` C${x + bow} ${y + step / 3} ${x + bow} ${y + (2 * step) / 3} ${x} ${y + step}`;
+      y += step;
+    }
+  };
+  // a level sweep across the page at `sy`, over the span a..b, from this margin to the other one
+  const cross = (sy, a, z) => {
+    const to = x === L ? R : L;
+    const s = Math.sign(to - x);
+    run(sy - 150);
+    d += ` C${x} ${sy - 60} ${a - s * 120} ${sy} ${a} ${sy}`;
+    d += ` L${z} ${sy}`;
+    d += ` C${z + s * 120} ${sy} ${to} ${sy + 60} ${to} ${sy + 150}`;
+    x = to;
+    y = sy + 150;
+  };
 
-  return { d, start, height: end.y + 40, width: W };
+  // 1. just above the details photos, left to right
+  const gy = grid.top - 28;
+  cross(gy, Math.max(L + 30, grid.left - 20), Math.min(R - 30, grid.right + 20));
+  // 2. under the greeting heading, right to left
+  const uy = head.bottom + 10;
+  cross(uy, Math.min(R - 30, head.right + 20), Math.max(L + 30, head.left - 20));
+  // 3. down the left margin, then one long, low sweep in to the Book button
+  const end = { x: b.left - 14, y: (b.top + b.bottom) / 2 };
+  run(end.y - 260);
+  d += ` C${L} ${end.y - 60} ${end.x - 220} ${end.y + 10} ${end.x} ${end.y}`;
+
+  return {
+    d,
+    start,
+    height: end.y + 40,
+    width: W,
+    touches: [
+      { el: gridEl, x: grid.left, y: gy },
+      { el: headEl, x: head.right, y: uy },
+    ],
+  };
 }
 
 // Sparks shed by the glowing tip, drawn on one small screen-sized canvas (cheap, unlike a blur
@@ -169,15 +214,38 @@ export default function RibbonThread() {
     const sparks = createSparks(canvas.current);
     const drawables = svg.createDrawable(ref.current.querySelectorAll("path"));
     let burst = false;
+    // one walk along the line: how far down it has reached at each length (the sideways sweeps add
+    // length without depth), and the length at which it passes closest to each touch point
+    const STEP = 4;
+    const depth = [];
+    const touches = geo.touches.map(({ el }) => ({ el, len: 0, best: Infinity, fired: false }));
+    for (let l = 0, deepest = 0; l <= length; l += STEP) {
+      const p = line.getPointAtLength(l);
+      depth.push((deepest = Math.max(deepest, p.y)));
+      geo.touches.forEach(({ x, y }, i) => {
+        const dd = (p.x - x) ** 2 + (p.y - y) ** 2;
+        if (dd < touches[i].best) Object.assign(touches[i], { len: l, best: dd });
+      });
+    }
     let shown = 0; // drawn fraction on screen, eased toward the scroll position
     let raf = 0;
 
-    // progress from the ribbon's live position (not cached offsets, which go stale as reveals and
-    // the 3D section settle): 0 when its top reaches mid-screen, 1 when its end reaches the bottom
+    // the tip follows a line across the screen, from its live position (not cached offsets, which go
+    // stale as reveals and the 3D section settle). The line sits mid-screen, and slides to the bottom
+    // over the last screen of the page so the ribbon can still reach the Book button.
     const target = () => {
       const r = ref.current.getBoundingClientRect();
-      const p = (innerHeight / 2 - r.top) / (r.height - innerHeight / 2);
-      return Math.min(Math.max(p, 0), 1);
+      const left = document.documentElement.scrollHeight - innerHeight - scrollY;
+      const probe = innerHeight * (1 - 0.5 * Math.min(1, left / innerHeight)) - r.top;
+      let lo = 0;
+      let hi = depth.length - 1;
+      if (probe >= depth[hi]) return 1;
+      while (lo < hi) {
+        const mid = (lo + hi) >> 1;
+        if (depth[mid] < probe) lo = mid + 1;
+        else hi = mid;
+      }
+      return (lo * STEP) / length;
     };
 
     const frame = () => {
@@ -191,6 +259,14 @@ export default function RibbonThread() {
       const x = box.left + pt.x;
       const y = box.top + pt.y + scrollY;
       sparks.move(x, y, shown > 0.002 && shown < 0.998);
+      // the ribbon reaches the details photos / the greeting: let them react (once), with a burst of sparks
+      for (const t of touches) {
+        if (!t.fired && shown * length >= t.len) {
+          t.fired = true;
+          t.el.dispatchEvent(new CustomEvent("ribbon:touch"));
+          sparks.burst(x, y);
+        }
+      }
       // the ribbon arrives at Book your stay: one burst, re-armed if you scroll back up
       if (shown >= 0.998 && !burst) {
         burst = true;
@@ -200,6 +276,7 @@ export default function RibbonThread() {
       raf = shown === goal ? 0 : requestAnimationFrame(frame);
     };
     const wake = () => raf || (raf = requestAnimationFrame(frame));
+    document.documentElement.dataset.ribbon = "on"; // touch points wait for the ribbon (lib/ribbon-touch.js)
     addEventListener("scroll", wake, { passive: true });
     addEventListener("resize", wake);
     shown = target(); // start where the page already is (e.g. after a reload mid-page)
@@ -210,6 +287,7 @@ export default function RibbonThread() {
       removeEventListener("scroll", wake);
       removeEventListener("resize", wake);
       utils.set(drawables, { draw: "0 1" });
+      delete document.documentElement.dataset.ribbon;
       sparks.destroy();
     };
   }, [geo]);

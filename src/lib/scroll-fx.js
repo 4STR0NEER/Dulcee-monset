@@ -53,7 +53,13 @@ export function initScrollFx() {
         .add(img, { scale: [1.3, 1], duration: 1600, ease: "out(4)" }, 0);
       undo.push(() => tl.revert());
     });
-    const drift = animate(frame.querySelector(".frame-drift"), {
+    undo.push(drift(frame));
+  });
+  document.querySelectorAll(".bigframe").forEach((fig) => undo.push(drift(fig)));
+
+  // photos drift inside their frames as they pass (depth)
+  function drift(frame) {
+    const a = animate(frame.querySelector(".frame-drift"), {
       y: ["-6%", "6%"],
       ease: "linear",
       autoplay: onScroll({
@@ -63,16 +69,44 @@ export function initScrollFx() {
         sync: true,
       }),
     });
-    undo.push(() => drift.revert());
-  });
+    return () => a.revert();
+  }
 
-  // the details grid: tiles open upward one after another, each photo settling as it opens
-  document.querySelectorAll(".tiles").forEach((grid) => {
-    const tiles = grid.querySelectorAll(".tile");
-    tiles.forEach((t) => (t.style.clipPath = "inset(100% 0 0 0)"));
-    onEnter(grid, () => {
-      animate(tiles, { clipPath: ["inset(100% 0 0 0)", "inset(0% 0 0 0)"], duration: 1000, ease: "inOut(4)", delay: stagger(110) });
-      animate(grid.querySelectorAll(".tile img"), { scale: [1.35, 1], duration: 1500, ease: "out(4)", delay: stagger(110) });
+  // big photos: a cerulean block slides back to its final place (left third, or bottom band on phones)
+  // as the photo scrolls in. Driven from the live position each frame, like the ribbon.
+  document.querySelectorAll(".bigframe").forEach((fig) => {
+    const panel = fig.querySelector(".block-panel");
+    const sub = fig.querySelector(".block-sub");
+    let to = [];
+    const readEnd = () => {
+      panel.style.clipPath = "";
+      to = getComputedStyle(panel).clipPath.match(/[\d.]+/g).map(Number); // CSS end state for this breakpoint
+    };
+    const clamp = (v) => Math.min(Math.max(v, 0), 1);
+    const ease = (t) => (t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2);
+    let raf = 0;
+    const update = () => {
+      raf = 0;
+      const p = clamp((innerHeight - fig.getBoundingClientRect().top) / (innerHeight * 0.85));
+      const e = ease(p);
+      panel.style.clipPath = `inset(${to.map((v) => (v * e).toFixed(2) + "%").join(" ")})`;
+      sub.style.opacity = clamp((p - 0.65) / 0.35);
+    };
+    const onScroll = () => raf || (raf = requestAnimationFrame(update));
+    const onResize = () => {
+      readEnd();
+      update();
+    };
+    readEnd();
+    update();
+    addEventListener("scroll", onScroll, { passive: true });
+    addEventListener("resize", onResize);
+    undo.push(() => {
+      cancelAnimationFrame(raf);
+      removeEventListener("scroll", onScroll);
+      removeEventListener("resize", onResize);
+      panel.style.clipPath = "";
+      sub.style.opacity = "";
     });
   });
 

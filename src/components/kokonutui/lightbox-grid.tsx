@@ -17,6 +17,7 @@ import {
   useTransform,
 } from "motion/react";
 import {
+  type CSSProperties,
   type KeyboardEvent,
   type PointerEvent,
   type ReactNode,
@@ -625,6 +626,7 @@ export default function LightboxGrid({
         {images.map((image, index) => (
           <li
             className={cn("tile", index === 0 && "col-span-2 row-span-2")}
+            style={{ "--n": index } as CSSProperties}
             key={image.src}
           >
             <button

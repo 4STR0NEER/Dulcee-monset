@@ -9,6 +9,7 @@
   --color-grey-3: #cbdce1;
   --color-grey-5: #506d7c;
   --color-grey-6: #3f5b6a;
+  --color-ink: #0a2230;
 
   --font-display: "Source Sans 3 Variable", "Myriad Pro", system-ui, sans-serif;
   --font-body: "Mulish Variable", system-ui, sans-serif;
@@ -75,4 +76,57 @@ body {
 }
 .draw-line[data-shown] {
   transform: none;
+}
+
+/* Details: the photos wait as pale, unexposed prints and develop one after another when the ribbon's
+   light passes over them (data-lit, set by the ribbon touch). --n is the tile's index. */
+@media (prefers-reduced-motion: no-preference) {
+  .develop .tile {
+    transition:
+      opacity 1200ms var(--ease-out-strong),
+      filter 1600ms var(--ease-out-strong),
+      transform 1600ms var(--ease-out-strong);
+    transition-delay: calc(var(--n, 0) * 120ms);
+  }
+  .develop:not([data-lit]) .tile {
+    opacity: 0.35;
+    filter: brightness(1.9) saturate(0) blur(10px);
+    transform: scale(0.97);
+  }
+}
+
+/* Lobby: dark heading that glows warm gold when the ribbon touches it; then the team appears out of the light */
+.greet h2 {
+  color: var(--color-ink);
+  transition: color 900ms var(--ease-out-strong);
+}
+.greet[data-lit] h2 {
+  color: #8a6a36; /* deep maple: reads as lit gold on white, still AA */
+}
+.greet-bloom {
+  position: absolute;
+  inset: -45% -20%;
+  background: radial-gradient(closest-side, rgb(217 183 127 / 0.45), transparent);
+  opacity: 0;
+  transform: scale(0.6);
+  transition:
+    opacity 1100ms var(--ease-out-strong),
+    transform 1400ms var(--ease-out-strong);
+}
+.greet[data-lit] .greet-bloom {
+  opacity: 1;
+  transform: none;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .greet-photo {
+    transition:
+      opacity 1400ms var(--ease-out-strong) 350ms,
+      filter 1800ms var(--ease-out-strong) 350ms,
+      transform 1800ms var(--ease-out-strong) 350ms;
+  }
+  .greet:not([data-lit]) .greet-photo {
+    opacity: 0;
+    filter: brightness(2.2) blur(18px);
+    transform: scale(1.04);
+  }
 }

@@ -1,4 +1,6 @@
+import { useRef, useState } from "react";
 import LightboxGrid from "@/components/kokonutui/lightbox-grid";
+import { useRibbonTouch } from "@/lib/ribbon-touch";
 import { photo } from "@/lib/photo";
 
 const IMAGES = [
@@ -15,7 +17,12 @@ const IMAGES = [
 }));
 
 // 02 The details. Copy is the brand book's own core principles (p.7).
+// The photos wait as pale, unexposed prints; when the ribbon's light passes over them they develop,
+// one after another (index.css, .develop).
 export default function Details() {
+  const grid = useRef(null);
+  const [lit, setLit] = useState(false);
+  useRibbonTouch(grid, () => setLit(true));
   return (
     <section id="details" data-bg="#ecf1f2" className="px-6 py-24 sm:px-12 sm:py-36">
       <div className="mx-auto grid max-w-6xl gap-14 lg:grid-cols-[1fr_1.15fr] lg:gap-20">
@@ -34,7 +41,9 @@ export default function Details() {
           </p>
         </div>
 
-        <LightboxGrid images={IMAGES} className="tiles max-w-none" />
+        <div ref={grid} data-ribbon-sweep data-lit={lit || undefined} className="develop">
+          <LightboxGrid images={IMAGES} className="max-w-none" />
+        </div>
       </div>
     </section>
   );

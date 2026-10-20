@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import SpotlightNavbar from "@/components/vengeance/spotlight-navbar";
 import DulceeMark from "@/components/DulceeMark";
 import { BOOKING_URL } from "@/sections/Stay";
+import { scrollToTarget } from "@/lib/smooth";
 
 const CHAPTERS = [
   { label: "The room", href: "#room" },
@@ -12,9 +13,7 @@ const CHAPTERS = [
   { label: "Naga City", href: "#naga" },
 ];
 
-const reduceMotion = () => matchMedia("(prefers-reduced-motion: reduce)").matches;
-const go = (href) =>
-  document.querySelector(href)?.scrollIntoView({ behavior: reduceMotion() ? "auto" : "smooth" });
+const go = (href) => scrollToTarget(document.querySelector(href));
 
 // Floating glass bar: drops in once the curtain has lifted, tucks away while you read down, returns on the way up.
 export default function Header({ loaded }) {
@@ -67,7 +66,7 @@ export default function Header({ loaded }) {
             href="#room"
             onClick={(e) => {
               e.preventDefault();
-              scrollTo({ top: 0, behavior: reduceMotion() ? "auto" : "smooth" });
+              scrollToTarget(0);
             }}
             aria-label="Hotel Dulceé, back to top"
             className="relative z-10 flex items-center gap-2 rounded-full py-1 pr-3 pl-2 outline-none focus-visible:ring-2 focus-visible:ring-maple md:mr-1 md:border-r md:border-grey-3 md:pr-4"

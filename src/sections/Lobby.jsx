@@ -1,35 +1,48 @@
-import Frame from "@/components/Frame";
+import { useRef, useState } from "react";
+import BigFrame from "@/components/BigFrame";
+import { photo } from "@/lib/photo";
+import { useRibbonTouch } from "@/lib/ribbon-touch";
 
 // 03 The lobby. "A warm greeting" is from the brand book's messaging page (p.13).
+// The ribbon runs under the heading; when it touches, the heading glows and the team appears
+// out of the light below it (index.css, .greet).
 export default function Lobby() {
+  const head = useRef(null);
+  const [lit, setLit] = useState(false);
+  useRibbonTouch(head, () => setLit(true));
   return (
     <section id="lobby" data-bg="#ffffff">
-      <Frame
+      <BigFrame
         name="lobby-lounge"
         alt="The lobby lounge: woven rattan chairs on white marble under a ceiling of flowing timber ribbons"
+        title={["The", "Lobby"]}
+        sub="Woven rattan chairs on white marble, under a ceiling of flowing timber ribbons."
         className="h-[85svh] min-h-96"
       />
 
-      <div className="mx-auto grid max-w-6xl items-center gap-12 px-6 py-24 sm:px-12 sm:py-32 lg:grid-cols-[1fr_1.25fr] lg:gap-20">
-        <div>
-          <p className="reveal font-body text-xs tracking-[0.3em] text-grey-5 uppercase">
-            <span className="text-maple">03</span>&ensp;The lobby
-          </p>
-          <h2 className="rise mt-5 font-display text-4xl leading-[1.1] font-light text-cerulean sm:text-6xl">
+      <div data-lit={lit || undefined} className="greet mx-auto max-w-5xl px-6 py-24 text-center sm:px-12 sm:py-32">
+        <p className="reveal font-body text-xs tracking-[0.3em] text-grey-5 uppercase">
+          <span className="text-maple">03</span>&ensp;The lobby
+        </p>
+        <div ref={head} data-ribbon-touch className="relative mx-auto mt-5 w-fit">
+          <span aria-hidden="true" className="greet-bloom" />
+          <h2 className="rise relative font-display text-4xl leading-[1.1] font-light sm:text-6xl">
             A warm <span className="ul text-maple">greeting.</span>
           </h2>
-          <p className="reveal mt-6 max-w-md font-body text-base leading-[1.8] text-grey-6" style={{ "--i": 2 }}>
-            We embody the uniquely Filipino spirit of hospitality with respect, warmth, and always with a smile.
-          </p>
         </div>
+        <p className="reveal mx-auto mt-8 max-w-md font-body text-base leading-[1.8] text-ink/80" style={{ "--i": 2 }}>
+          We embody the uniquely Filipino spirit of hospitality with respect, warmth, and always with a smile.
+        </p>
 
-        {/* bleeds off the right edge of the page so it sits in the layout rather than floating on it */}
-        <Frame
-          name="lobby-team"
-          sizes="(min-width: 1024px) 60vw, 100vw"
-          alt="Four members of the front desk team in blue and black uniforms, smiling at reception"
-          className="-mx-6 aspect-[4/3] sm:-mx-12 lg:ml-0 lg:mr-[calc(-1*max(3rem,(100vw_-_72rem)/2_+_3rem))] lg:aspect-auto lg:h-[75svh]"
-        />
+        <figure className="greet-photo mt-14 aspect-[4/3] overflow-hidden sm:aspect-[16/9]">
+          <img
+            {...photo("lobby-team")}
+            sizes="(min-width: 1024px) 64rem, 100vw"
+            alt="Four members of the front desk team in blue and black uniforms, smiling at reception"
+            loading="lazy"
+            className="h-full w-full object-cover"
+          />
+        </figure>
       </div>
     </section>
   );
