@@ -9,6 +9,7 @@ import About from "./sections/About";
 import Details from "./sections/Details";
 import Lobby from "./sections/Lobby";
 import Terrace from "./sections/Terrace";
+import Amenities from "./sections/Amenities";
 import Outside from "./sections/Outside";
 import Stay from "./sections/Stay";
 import { photo } from "./lib/photo";
@@ -40,6 +41,7 @@ export default function App() {
         <Details />
         <Lobby />
         <Terrace />
+        <Amenities />
         <Outside />
         <Stay />
         <RibbonThread />

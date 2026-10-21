@@ -1,12 +1,13 @@
 import { useEffect, useRef } from "react";
 import { createScope, createTimeline, onScroll, utils } from "animejs";
 import { photo } from "@/lib/photo";
+import MapCard from "@/components/MapCard";
 
 // The hotel's Google Maps listing: the client's link with the ?entry/g_ep tracking query removed.
 const DIRECTIONS =
   "https://www.google.com/maps/place/Hotel+Dulcee/@10.2218966,123.7601939,17z/data=!4m13!1m2!2m1!1sgoogle+maps+Hotel+Dulcee+Naga+City+Cebu!3m9!1s0x33a9794d9d694b1b:0xf9ec09d719485483!5m2!4m1!1i2!8m2!3d10.2218948!4d123.7627722!15sCidnb29nbGUgbWFwcyBIb3RlbCBEdWxjZWUgTmFnYSBDaXR5IENlYnUiA4gBAVopIidnb29nbGUgbWFwcyBob3RlbCBkdWxjZWUgbmFnYSBjaXR5IGNlYnWSAQVob3RlbJoBJENoZERTVWhOTUc5blMwVkpRMEZuU1VOU05tUmlkR2xCUlJBQuABAPoBBAgRECw!16s%2Fg%2F11rsct6kzf";
 
-// 05 Naga City, Cebu. The second pull-back: the terrace view shrinks into a frame around the sea
+// 06 Naga City, Cebu. The second pull-back: the terrace view shrinks into a frame around the sea
 // and the building it belongs to comes into view. Final layout lives in CSS; scroll animates *into* it.
 export default function Outside() {
   const root = useRef(null);
@@ -66,7 +67,7 @@ export default function Outside() {
 
           <div className="words absolute top-[6%] right-[6%] left-[6%] md:top-[60%] md:left-[60%]">
             <p className="font-body text-xs tracking-[0.3em] text-white/70 uppercase">
-              <span className="text-maple">05</span>&ensp;Naga City, Cebu
+              <span className="text-maple">06</span>&ensp;Naga City, Cebu
             </p>
             <h2
               className="mt-4 font-display text-3xl leading-[1.1] font-light text-white sm:text-5xl"
@@ -86,17 +87,9 @@ export default function Outside() {
         <p className="reveal mx-auto mt-8 max-w-md font-body text-base leading-[1.8] text-white/75" style={{ "--i": 1 }}>
           We source local and hire local. We are supporting our community at every step.
         </p>
-        <div className="reveal mt-10" style={{ "--i": 2 }}>
-          <a
-            href={DIRECTIONS}
-            target="_blank"
-            rel="noreferrer"
-            className="inline-block border-b border-maple pb-1 font-body text-sm tracking-[0.2em] text-white uppercase transition-colors duration-150 ease-out hover:text-maple"
-          >
-            Get directions
-          </a>
-        </div>
       </div>
+
+      <MapCard listing={DIRECTIONS} />
     </section>
   );
 }

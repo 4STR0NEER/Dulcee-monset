@@ -32,7 +32,7 @@ function Monogram() {
 // module-level so the ribbon's effect doesn't restart on every render
 const RIBBON = { face: "#b18f59", foldA: "#ffffff", foldB: "#cbdce1", foldC: "#d9c29a" };
 
-// 06 Stay. Copy: brand book messaging page (p.13).
+// 07 Stay. Copy: brand book messaging page (p.13).
 export default function Stay() {
   return (
     <section id="stay" data-bg="#0b3b57" className="relative overflow-hidden text-white">
@@ -48,7 +48,7 @@ export default function Stay() {
       <div className="relative mx-auto flex min-h-[80svh] max-w-3xl flex-col items-center justify-center px-6 py-28 text-center">
         <Monogram />
         <p className="reveal mt-2 font-body text-xs tracking-[0.3em] text-white/70 uppercase">
-          <span className="text-maple">06</span>&ensp;Stay with us
+          <span className="text-maple">07</span>&ensp;Stay with us
         </p>
         <h2
           className="rise mt-5 font-display text-4xl leading-[1.1] font-light sm:text-6xl"

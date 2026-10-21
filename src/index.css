@@ -136,3 +136,60 @@ body {
 .cutout {
   filter: drop-shadow(0 2px 2px rgb(10 34 48 / 0.45)) drop-shadow(0 8px 14px rgb(10 34 48 / 0.35));
 }
+
+/* Amenities: hidden pictures wait clipped away below; the active one rises over the one before it, which
+   holds for a beat underneath so no gap shows. Transitions (not keyframes), so fast hovers retarget smoothly. */
+.amenity-shot {
+  clip-path: inset(100% 0 0 0);
+  transition: clip-path 0s 800ms;
+}
+.amenity-shot[data-state="prev"] {
+  z-index: 1;
+  clip-path: inset(0);
+}
+.amenity-shot[data-state="active"] {
+  z-index: 2;
+  clip-path: inset(0);
+  transition: clip-path 1000ms var(--ease-out-strong);
+}
+.amenity-shot > * {
+  transform: scale(1.12);
+  transition: transform 0s 800ms;
+}
+.amenity-shot[data-state="active"] > * {
+  transform: none;
+  transition: transform 1500ms var(--ease-out-strong);
+}
+/* names wait in pale grey; the active one deepens to cerulean and steps right */
+.amenity-name {
+  color: #6d8a97; /* soft, but still 3.5:1 on the page */
+  transition:
+    color 300ms ease,
+    transform 600ms var(--ease-out-strong);
+}
+.amenity-line {
+  color: var(--color-grey-5);
+  opacity: 0.6;
+  transition: opacity 300ms ease;
+}
+.amenity-row[data-active] .amenity-name {
+  color: var(--color-cerulean);
+  transform: translateX(10px);
+}
+.amenity-row[data-active] .amenity-line {
+  opacity: 1;
+}
+/* phones: a band of page colour above the pinned frame, so names scrolling up vanish before the header */
+@media (max-width: 767px) {
+  .amenity-frame {
+    box-shadow: 0 -96px 0 24px var(--color-grey-1);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .amenity-shot,
+  .amenity-shot > *,
+  .amenity-name {
+    transform: none !important;
+    transition: none !important;
+  }
+}

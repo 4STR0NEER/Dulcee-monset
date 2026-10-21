@@ -10,6 +10,7 @@ const CHAPTERS = [
   { label: "Details", href: "#details" },
   { label: "Lobby", href: "#lobby" },
   { label: "Terrace", href: "#terrace" },
+  { label: "Amenities", href: "#amenities" },
   { label: "Naga City", href: "#naga" },
 ];
 
